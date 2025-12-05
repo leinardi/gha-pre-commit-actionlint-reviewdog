@@ -1,19 +1,37 @@
-# Run <TOOL> via pre-commit + reviewdog
+# Run actionlint via pre-commit + reviewdog
 
-> Template README — replace `<TOOL>` and `<HOOK_ID>` with your actual tool and pre-commit hook name.
-
-This GitHub Action runs a single [`pre-commit`](https://pre-commit.com/) hook on a diff range and reports results to pull requests
-using [reviewdog](https://github.com/reviewdog/reviewdog).
+This GitHub Action runs the [`actionlint-oneline`](https://github.com/rhysd/actionlint) [`pre-commit`](https://pre-commit.com/) hook on a diff range
+and reports results to pull requests using [reviewdog](https://github.com/reviewdog/reviewdog).
 
 Typical use case:
 
-- Run the `<HOOK_ID>` pre-commit hook (e.g. `actionlint-oneline`)
+- Run `actionlint-oneline` on changed workflow files
 - Annotate problems directly on the PR diff
 - Fail the job if violations are found
 
 ## Requirements
 
-- A `.pre-commit-config.yaml` in your repository with the `<HOOK_ID>` hook enabled
+Add the `actionlint` hooks to your `.pre-commit-config.yaml`, including the `actionlint-oneline` alias with the `manual` stage:
+
+```yaml
+repos:
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.8
+    hooks:
+      - id: actionlint
+        name: actionlint
+        files: ^\.github/workflows/.*\.(yml|yaml)$
+        args: ["-shellcheck"]
+      - id: actionlint
+        alias: actionlint-oneline
+        name: actionlint (one line per one error)
+        files: ^\.github/workflows/.*\.(yml|yaml)$
+        args: ["-oneline", "-shellcheck"]
+        stages: [manual]
+````
+
+You also need:
+
 - GitHub Actions enabled on the repository
 - `secrets.GITHUB_TOKEN` available (default on GitHub-hosted runners)
 
@@ -27,45 +45,48 @@ Typical use case:
 
 ## Outputs
 
-| Name       | Description                                  |
-|------------|----------------------------------------------|
-| `exitcode` | Exit code of the `<HOOK_ID>` pre-commit hook |
+| Name       | Description                                |
+|------------|--------------------------------------------|
+| `exitcode` | Exit code of the `actionlint-oneline` hook |
 
 ## Usage
 
-In your workflow (example for a pull request):
+Example workflow for pull requests:
 
 ```yaml
-name: Lint with <TOOL>
+name: Lint workflows with actionlint
 
 on:
   pull_request:
 
 jobs:
-  lint:
+  actionlint:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Run <TOOL> via pre-commit + reviewdog
-        uses: <OWNER>/<REPO>@v1
+      - name: Run actionlint via pre-commit + reviewdog
+        uses: leinardi/gha-pre-commit-actionlint-reviewdog@v1
         with:
           from-ref: ${{ github.event.pull_request.base.sha }}
           to-ref: ${{ github.event.pull_request.head.sha }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-````
+```
 
 ## Versioning
 
 It’s recommended to pin to the major version:
 
 ```yaml
-uses: <OWNER>/<REPO>@v1
+uses: leinardi/gha-pre-commit-actionlint-reviewdog@v1
 ```
 
 For fully reproducible behavior, pin to an exact tag:
 
 ```yaml
-uses: <OWNER>/<REPO>@v1.0.0
+uses: leinardi/gha-pre-commit-actionlint-reviewdog@v1.0.0
 ```

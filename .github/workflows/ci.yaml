@@ -9,7 +9,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  pre-commit:
+  actionlint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run actionlint via pre-commit + reviewdog
+        # Use the local action from this repo/branch
+        uses: ./
+        with:
+          from-ref: ${{ github.event.pull_request.base.sha }}
+          to-ref: ${{ github.event.pull_request.head.sha }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  pre-commit: # TODO remove once all the hooks have their own action
     name: Run pre-commit
     runs-on: ubuntu-latest
 
