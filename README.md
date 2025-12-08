@@ -34,6 +34,13 @@ You also need:
 
 - GitHub Actions enabled on the repository
 - `secrets.GITHUB_TOKEN` available (default on GitHub-hosted runners)
+- `actions/checkout` fetching enough history to include both `from-ref` and `to-ref`, for example:
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0
+```
 
 ## Inputs
 
